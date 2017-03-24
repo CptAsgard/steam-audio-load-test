@@ -14,20 +14,17 @@ public class LoadTimeLogger : MonoBehaviour
 	private Text m_Text;
 
 	private Stopwatch m_Stopwatch;
-	private int m_Counter = 0;
 
 	protected void Start()
 	{
-		m_Stopwatch = new Stopwatch();
-		m_Stopwatch.Start();
-
-		SceneManager.sceneLoaded += StopAndLog;
-
 		StartCoroutine(Load());
 	}
 
 	private IEnumerator Load()
 	{
+		m_Stopwatch = new Stopwatch();
+		m_Stopwatch.Start();
+
 		for (int i = 0; i < m_ScenesToLoad.Length; i++)
 		{
 			var stopwatch = new Stopwatch();
@@ -36,7 +33,7 @@ public class LoadTimeLogger : MonoBehaviour
 			var op = SceneManager.LoadSceneAsync(m_ScenesToLoad[i], LoadSceneMode.Additive);
 			op.allowSceneActivation = false;
 
-			while (op.progress < 0.9f)
+			while (op.progress < 0.9f) // magic value before it hits the scene initialization point
 			{
 				yield return null;
 			}
@@ -53,20 +50,15 @@ public class LoadTimeLogger : MonoBehaviour
 			stopwatch.Stop();
 			Debug.Log("Scene activation time (ms): " + stopwatch.ElapsedMilliseconds);
 		}
+
+		m_Stopwatch.Stop();
+		LogTotalTime();
 	}
 
-	private void StopAndLog(Scene a_Scene, LoadSceneMode a_LoadSceneMode)
+	private void LogTotalTime()
 	{
-		m_Counter++;
-		if (m_Counter >= m_ScenesToLoad.Length)
-		{
-			m_Stopwatch.Stop();
-
-			var elapsedTime = m_Stopwatch.ElapsedMilliseconds;
-			var timeString = "Time elapsed (ms): " + elapsedTime;
-
-			Debug.Log(timeString);
-			m_Text.text = timeString;
-		}
+		var timeString = "Time elapsed (ms): " + m_Stopwatch.ElapsedMilliseconds;
+		Debug.Log(timeString);
+		m_Text.text = timeString;
 	}
 }
